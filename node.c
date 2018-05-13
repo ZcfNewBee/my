@@ -64,8 +64,6 @@ typedef enum
 
 
 #define foreach_ip4ip6_output_next                                                \
-  _(PUNT, "error-punt")                                                        \
-  _(DROP, "error-drop")                                                        \
   _(IP4_OUTPUT, "interface-output")
 
 typedef enum
@@ -74,7 +72,7 @@ typedef enum
 	foreach_ip4ip6_output_next
 #undef _
 	IP4IP6_OUTPUT_N_NEXT,
-} ip6ip4_input_next_t;
+} ip4ip6_output_next_t;
 
 
 u8 *
@@ -336,8 +334,7 @@ ip4ip6_output(vlib_main_t * vm, vlib_node_runtime_t * node,
 			vlib_buffer_t *b0;
 			ip6_header_t *ip60;
 			ip4_header_t *ip40;
-			//ip6_header_t *ip60;
-			u32 next0 = IP4IP6_OUTPUT_NEXT_DROP;
+			u32 next0;
 
 			u8 inner_protocol0;
 
