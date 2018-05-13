@@ -62,6 +62,21 @@ typedef enum
 	IP6IP4_INPUT_N_NEXT,
 } ip6ip4_input_next_t;
 
+
+#define foreach_ip4ip6_output_next                                                \
+  _(PUNT, "error-punt")                                                        \
+  _(DROP, "error-drop")                                                        \
+  _(IP4_OUTPUT, "interface-output")
+
+typedef enum
+{
+#define _(s, n) IP4IP6_OUTPUT_NEXT_##s,
+	foreach_ip4ip6_output_next
+#undef _
+	IP4IP6_OUTPUT_N_NEXT,
+} ip6ip4_input_next_t;
+
+
 u8 *
 format_ipip_rx_trace (u8 * s, va_list * args)
 {
@@ -298,7 +313,68 @@ ip6ip4_input(vlib_main_t * vm, vlib_node_runtime_t * node,
 	return from_frame->n_vectors;
 }
 
+static uword
+ip4ip6_output(vlib_main_t * vm, vlib_node_runtime_t * node,
+	vlib_frame_t * from_frame)
+{
+	u32 n_left_from, next_index, *from, *to_next, n_left_to_next;
+	//ipip_main_t *gm = &ipip_main;
+	//u32 thread_index = vlib_get_thread_index();
+	//u32 len;
+	//vnet_interface_main_t *im = &gm->vnet_main->interface_main;
 
+	from = vlib_frame_vector_args(from_frame);
+	n_left_from = from_frame->n_vectors;
+	next_index = node->cached_next_index;
+	while (n_left_from > 0)
+	{
+		vlib_get_next_frame(vm, node, next_index, to_next, n_left_to_next);
+
+		while (n_left_from > 0 && n_left_to_next > 0)
+		{
+			u32 bi0;
+			vlib_buffer_t *b0;
+			ip6_header_t *ip60;
+			ip4_header_t *ip40;
+			//ip6_header_t *ip60;
+			u32 next0 = IP4IP6_OUTPUT_NEXT_DROP;
+
+			u8 inner_protocol0;
+
+			bi0 = to_next[0] = from[0];
+			from += 1;
+			n_left_from -= 1;
+			to_next += 1;
+			n_left_to_next -= 1;
+
+			b0 = vlib_get_buffer(vm, bi0);
+
+			ip60 = vlib_buffer_get_current(b0);
+			vlib_buffer_advance(b0, -sizeof(ip4_header_t));
+			ip40 = vlib_buffer_get_current(b0);
+			inner_protocol0 = ip40->protocol;
+
+
+			if (inner_protocol0 == IP_PROTOCOL_IPV6)
+				next0 = IP4IP6_OUTPUT_NEXT_IP4_OUTPUT;
+			else {
+				vlib_buffer_advance(b0, sizeof(ip4_header_t));
+				next0 = IP4IP6_OUTPUT_NEXT_IP4_OUTPUT;
+			}
+
+
+
+			vlib_validate_buffer_enqueue_x1(vm, node, next_index, to_next,
+				n_left_to_next, bi0, next0);
+		}
+
+		vlib_put_next_frame(vm, node, next_index, n_left_to_next);
+	}
+	vlib_node_increment_counter(vm,
+		ip4ip6_output_node.index, IPIP_ERROR_DECAP_PKTS,
+		from_frame->n_vectors);
+	return from_frame->n_vectors;
+}
 
 static char *ipip_error_strings[] = {
 #define _(sym,string) string,
@@ -360,8 +436,26 @@ VLIB_REGISTER_NODE(ip6ip4_input_node) = {
 },
 };
 
+/* *INDENT-OFF* */
+VLIB_REGISTER_NODE(ip4ip6_output_node) = {
+	.function = ip4ip6_output,
+	.name = "ip4ip6-output",
+	/* Takes a vector of packets. */
+	.vector_size = sizeof(u32),
+	.n_errors = IPIP_N_ERROR,
+	.error_strings = ipip_error_strings,
+	.n_next_nodes = IP4IP6_OUTPUT_N_NEXT,
+	.next_nodes =
+{
+#define _(s, n) [IP4IP6_OUTPUT_NEXT_##s] = n,
+	foreach_ip4ip6_output_next
+#undef _
+},
+};
+
 
 VLIB_NODE_FUNCTION_MULTIARCH(ip6ip4_input_node, ip6ip4_input)
+VLIB_NODE_FUNCTION_MULTIARCH(ip4ip6_output_node, ip4ip6_output)
 VLIB_NODE_FUNCTION_MULTIARCH(ipip4_input_node, ipip4_input)
 VLIB_NODE_FUNCTION_MULTIARCH(ipip6_input_node, ipip6_input)
 
