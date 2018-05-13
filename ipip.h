@@ -127,8 +127,18 @@ typedef struct
 } ip4ip6_main_t;
 
 
+typedef struct
+{
+	/* convenience */
+	vlib_main_t *vlib_main;
+	vnet_main_t *vnet_main;
+
+} ip6ip4_main_t;
+
 extern ipip_main_t ipip_main;
 extern ip4ip6_main_t ip4ip6_main;
+extern ip6ip4_main_t ip6ip4_main;
+extern vlib_node_registration_t ip4ip6_output_node;
 extern vlib_node_registration_t ipip4_input_node;
 extern vlib_node_registration_t ipip6_input_node;
 extern vlib_node_registration_t ip6ip4_input_node;
