@@ -21,8 +21,6 @@
 #include <vnet/mpls/mpls.h>
 #include <vnet/pg/pg.h>
 #include <vppinfra/sparse_vec.h>
-#include <vnet/ethernet/ethernet.h>
-
 
 #define foreach_ipip_input_next                                                \
   _(PUNT, "error-punt")                                                        \
@@ -46,21 +44,6 @@ typedef struct
   ip46_address_t dst;
   u8 is_ipv6;
 } ipip_rx_trace_t;
-
-
-
-#define foreach_ip6ip4_input_next                                                \
-  _(PUNT, "error-punt")                                                        \
-  _(DROP, "error-drop")                                                        \
-  _(IP6_INPUT, "ip6-input")
-
-typedef enum
-{
-#define _(s, n) IP6IP4_INPUT_NEXT_##s,
-	foreach_ip6ip4_input_next
-#undef _
-	IP6IP4_INPUT_N_NEXT,
-} ip6ip4_input_next_t;
 
 u8 *
 format_ipip_rx_trace (u8 * s, va_list * args)
@@ -272,103 +255,8 @@ VLIB_REGISTER_NODE(ipip6_input_node) = {
     .format_trace = format_ipip_rx_trace,
 };
 
-
-
-static uword
-ip6ip4_input(vlib_main_t * vm, vlib_node_runtime_t * node,
-	vlib_frame_t * from_frame)
-{
-	u32 n_left_from, next_index, *from, *to_next, n_left_to_next;
-	//ipip_main_t *gm = &ipip_main;
-	//u32 thread_index = vlib_get_thread_index();
-	//u32 len;
-	//vnet_interface_main_t *im = &gm->vnet_main->interface_main;
-
-	from = vlib_frame_vector_args(from_frame);
-	n_left_from = from_frame->n_vectors;
-	next_index = node->cached_next_index;
-	while (n_left_from > 0)
-	{
-		vlib_get_next_frame(vm, node, next_index, to_next, n_left_to_next);
-
-		while (n_left_from > 0 && n_left_to_next > 0)
-		{
-			u32 bi0;
-			vlib_buffer_t *b0;
-			ip4_header_t *ip40;
-			//ip6_header_t *ip60;
-			u32 next0 = IP6IP4_INPUT_NEXT_DROP;
-
-			u8 inner_protocol0;
-
-			bi0 = to_next[0] = from[0];
-			from += 1;
-			n_left_from -= 1;
-			to_next += 1;
-			n_left_to_next -= 1;
-
-			b0 = vlib_get_buffer(vm, bi0);
-
-			ip40 = vlib_buffer_get_current(b0);
-			vlib_buffer_advance(b0, sizeof(*ip40));
-			inner_protocol0 = ip40->protocol;
-
-
-			if (inner_protocol0 == IP_PROTOCOL_IPV6)
-				next0 = IP6IP4_INPUT_NEXT_IP6_INPUT;
-			else
-				next0 = IP6IP4_INPUT_NEXT_DROP;
-
-			//len = vlib_buffer_length_in_chain(vm, b0);
-
-			//vlib_increment_combined_counter(im->combined_sw_if_counters +
-			//	VNET_INTERFACE_COUNTER_RX,
-			//	thread_index, 0,
-			//	1 /* packets */,
-			//	len /* bytes */);
-
-
-			vlib_validate_buffer_enqueue_x1(vm, node, next_index, to_next,
-				n_left_to_next, bi0, next0);
-		}
-
-		vlib_put_next_frame(vm, node, next_index, n_left_to_next);
-	}
-	vlib_node_increment_counter(vm,
-		ip6ip4_input_node.index, IPIP_ERROR_DECAP_PKTS,
-		from_frame->n_vectors);
-	return from_frame->n_vectors;
-}
-
-
-
-/* *INDENT-OFF* */
-VLIB_REGISTER_NODE(ip6ip4_input_node) = {
-	.function = ip6ip4_input,
-	.name = "ip6ip4-input",
-	/* Takes a vector of packets. */
-	.vector_size = sizeof(u32),
-	.n_errors = IPIP_N_ERROR,
-	.error_strings = ipip_error_strings,
-	.n_next_nodes = IP6IP4_INPUT_N_NEXT,
-	.next_nodes =
-{
-#define _(s, n) [IPIP_INPUT_NEXT_##s] = n,
-	foreach_ip6ip4_input_next
-#undef _
-},
-};
-
-
-VLIB_NODE_FUNCTION_MULTIARCH(ip6ip4_input_node, ip6ip4_input)
 VLIB_NODE_FUNCTION_MULTIARCH(ipip4_input_node, ipip4_input)
 VLIB_NODE_FUNCTION_MULTIARCH(ipip6_input_node, ipip6_input)
-
-VNET_FEATURE_INIT(ip6ip4_input_node, static) = {
-	.arc_name = "device-input",
-	.node_name = "ip6ip4_input_node",
-};
-
 /* *INDENT-ON* */
 
 /*

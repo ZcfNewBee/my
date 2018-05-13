@@ -26,8 +26,6 @@
 #include <vnet/ipip/ipip.h>
 
 ipip_main_t ipip_main;
-ip4ip6_main_t ip4ip6_main;
-
 
 /* Packet trace structure */
 typedef struct
@@ -557,22 +555,8 @@ ipip_init (vlib_main_t * vm)
   return 0;
 }
 
-static clib_error_t *
-ip4ip6_init(vlib_main_t * vm)
-{
-	ethernet_register_input_type(vm, ETHERNET_TYPE_RESERVED, ip6ip4_input_node.index);
-
-	ip4ip6_main_t *gm = &ip4ip6_main;
-
-	memset(gm, 0, sizeof(gm[0]));
-	gm->vlib_main = vm;
-	gm->vnet_main = vnet_get_main();
-
-	return 0;
-}
-
 VLIB_INIT_FUNCTION (ipip_init);
-VLIB_INIT_FUNCTION(ip4ip6_init);
+
 /*
  * fd.io coding-style-patch-verification: ON
  *

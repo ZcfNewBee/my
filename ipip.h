@@ -117,21 +117,9 @@ typedef struct
   bool ip6_protocol_registered;
 } ipip_main_t;
 
-
-typedef struct
-{
-	/* convenience */
-	vlib_main_t *vlib_main;
-	vnet_main_t *vnet_main;
-
-} ip4ip6_main_t;
-
-
 extern ipip_main_t ipip_main;
-extern ip4ip6_main_t ip4ip6_main;
 extern vlib_node_registration_t ipip4_input_node;
 extern vlib_node_registration_t ipip6_input_node;
-extern vlib_node_registration_t ip6ip4_input_node;
 
 /*
  * sixrd_get_addr_net
