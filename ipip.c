@@ -27,7 +27,7 @@
 
 ipip_main_t ipip_main;
 ip4ip6_main_t ip4ip6_main;
-
+ip6ip4_main_t ip6ip4_main;
 
 /* Packet trace structure */
 typedef struct
@@ -571,8 +571,22 @@ ip4ip6_init(vlib_main_t * vm)
 	return 0;
 }
 
+static clib_error_t *
+ip6ip4_init(vlib_main_t * vm)
+{
+
+	ip6ip4_main_t *gm = &ip6ip4_main;
+
+	memset(gm, 0, sizeof(gm[0]));
+	gm->vlib_main = vm;
+	gm->vnet_main = vnet_get_main();
+
+	return 0;
+}
+
 VLIB_INIT_FUNCTION (ipip_init);
 VLIB_INIT_FUNCTION(ip4ip6_init);
+VLIB_INIT_FUNCTION(ip6ip4_init);
 /*
  * fd.io coding-style-patch-verification: ON
  *
