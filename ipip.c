@@ -560,7 +560,7 @@ ipip_init (vlib_main_t * vm)
 static clib_error_t *
 ip4ip6_init(vlib_main_t * vm)
 {
-	ethernet_register_input_type(vm, ETHERNET_TYPE_RESERVED, ip6ip4_input_node.index);
+	ethernet_register_input_type(vm, ETHERNET_TYPE_IP4, ip6ip4_input_node.index);
 
 	ip4ip6_main_t *gm = &ip4ip6_main;
 
