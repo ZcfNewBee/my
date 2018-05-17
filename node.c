@@ -52,7 +52,10 @@ typedef struct
 #define foreach_ip6ip4_input_next                                                \
   _(PUNT, "error-punt")                                                        \
   _(DROP, "error-drop")                                                        \
+  _(IP4_INPUT, "ip4-input")                                                     \
   _(IP6_INPUT, "ip6-input")
+
+
 
 typedef enum
 {
@@ -64,7 +67,9 @@ typedef enum
 
 
 #define foreach_ip4ip6_output_next                                                \
-  _(IP4_OUTPUT, "interface-output")
+  _(IP4_LOOKUP, "ip4-lookup")													\
+  _(IP6_LOOKUP, "ip6-lookup")
+
 
 typedef enum
 {
@@ -268,7 +273,7 @@ ip6ip4_input(vlib_main_t * vm, vlib_node_runtime_t * node,
 			vlib_buffer_t *b0;
 			ip4_header_t *ip40;
 			//ip6_header_t *ip60;
-			u32 next0 = IP6IP4_INPUT_NEXT_DROP;
+			u32 next0 = IP6IP4_INPUT_NEXT_IP4_INPUT;
 
 			u8 inner_protocol0;
 
@@ -287,8 +292,12 @@ ip6ip4_input(vlib_main_t * vm, vlib_node_runtime_t * node,
 
 			if (inner_protocol0 == IP_PROTOCOL_IPV6)
 				next0 = IP6IP4_INPUT_NEXT_IP6_INPUT;
-			else
-				next0 = IP6IP4_INPUT_NEXT_DROP;
+			else {
+				vlib_buffer_advance(b0, -sizeof(*ip40));
+				next0 = IP6IP4_INPUT_NEXT_IP4_INPUT;
+			}
+
+				
 
 			//len = vlib_buffer_length_in_chain(vm, b0);
 
@@ -346,17 +355,24 @@ ip4ip6_output(vlib_main_t * vm, vlib_node_runtime_t * node,
 
 			b0 = vlib_get_buffer(vm, bi0);
 
-			ip60 = vlib_buffer_get_current(b0);
+			//ip60 = vlib_buffer_get_current(b0);
 			vlib_buffer_advance(b0, -sizeof(ip4_header_t));
 			ip40 = vlib_buffer_get_current(b0);
 			inner_protocol0 = ip40->protocol;
+			
 
 
-			if (inner_protocol0 == IP_PROTOCOL_IPV6)
-				next0 = IP4IP6_OUTPUT_NEXT_IP4_OUTPUT;
+			if (inner_protocol0 == IP_PROTOCOL_IPV6) {
+				ip40->length = ip60->payload_length + sizeof(*ip60) + sizeof(*ip40);
+				ip40->ttl--;
+				ip40->checksum = ip4_header_checksum(ip40);
+				next0 = IP4IP6_OUTPUT_NEXT_IP4_LOOKUP;
+			}
+
+				
 			else {
 				vlib_buffer_advance(b0, sizeof(ip4_header_t));
-				next0 = IP4IP6_OUTPUT_NEXT_IP4_OUTPUT;
+				next0 = IP4IP6_OUTPUT_NEXT_IP6_LOOKUP;
 			}
 
 
