@@ -355,7 +355,7 @@ ip4ip6_output(vlib_main_t * vm, vlib_node_runtime_t * node,
 
 			b0 = vlib_get_buffer(vm, bi0);
 
-			//ip60 = vlib_buffer_get_current(b0);
+			ip60 = vlib_buffer_get_current(b0);
 			vlib_buffer_advance(b0, -sizeof(ip4_header_t));
 			ip40 = vlib_buffer_get_current(b0);
 			inner_protocol0 = ip40->protocol;
