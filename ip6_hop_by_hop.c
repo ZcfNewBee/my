@@ -44,7 +44,7 @@
 ip6_hop_by_hop_ioam_main_t ip6_hop_by_hop_ioam_main;
 
 #define foreach_ip6_hbyh_ioam_input_next	\
-  _(IP6_REWRITE, "ip6-rewrite")			\
+  _(IP6_REWRITE, "ip4ip6-output")			\
   _(IP6_LOOKUP, "ip4ip6-output")			\
   _(DROP, "ip6-drop")
 
