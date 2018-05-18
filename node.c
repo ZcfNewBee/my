@@ -53,7 +53,7 @@ typedef struct
   _(PUNT, "error-punt")                                                        \
   _(DROP, "error-drop")                                                        \
   _(IP4_INPUT, "ip4-input")                                                     \
-  _(IP6_INPUT, "ip6-add-hop-by-hop")
+  _(IP6_INPUT, "ip6-input")
 
 
 
