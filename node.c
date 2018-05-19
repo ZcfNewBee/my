@@ -431,6 +431,34 @@ VLIB_REGISTER_NODE(ipip6_input_node) = {
     .format_trace = format_ipip_rx_trace,
 };
 
+typedef struct
+{
+	u32 next_index;
+} ip6ip4_trace_t;
+
+static u8 *
+format_ip6ip4_trace(u8 * s, va_list * args)
+{
+	CLIB_UNUSED(vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+	CLIB_UNUSED(vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+	ip6ip4_trace_t *t = va_arg(*args,
+		ip6ip4_trace_t *);
+
+	s = format(s, "IP6IP4: next index %d", t->next_index);
+	return s;
+}
+
+static u8 *
+format_ip4ip6_trace(u8 * s, va_list * args)
+{
+	CLIB_UNUSED(vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+	CLIB_UNUSED(vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+	ip6ip4_trace_t *t = va_arg(*args,
+		ip6ip4_trace_t *);
+
+	s = format(s, "IP4IP6: next index %d", t->next_index);
+	return s;
+}
 
 /* *INDENT-OFF* */
 VLIB_REGISTER_NODE(ip6ip4_input_node) = {
@@ -447,6 +475,7 @@ VLIB_REGISTER_NODE(ip6ip4_input_node) = {
 	foreach_ip6ip4_input_next
 #undef _
 },
+	.format_trace = format_ip6ip4_trace,
 };
 
 /* *INDENT-OFF* */
@@ -464,6 +493,7 @@ VLIB_REGISTER_NODE(ip4ip6_output_node) = {
 	foreach_ip4ip6_output_next
 #undef _
 },
+	.format_trace = format_ip4ip6_trace,
 };
 
 
