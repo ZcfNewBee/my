@@ -47,6 +47,10 @@ typedef struct
   u8 is_ipv6;
 } ipip_rx_trace_t;
 
+typedef struct
+{
+	u32 next_index;
+} ip6ip4_trace_t;
 
 
 #define foreach_ip6ip4_input_next                                                \
@@ -296,7 +300,9 @@ ip6ip4_input(vlib_main_t * vm, vlib_node_runtime_t * node,
 				vlib_buffer_advance(b0, -sizeof(*ip40));
 				next0 = IP6IP4_INPUT_NEXT_IP4_INPUT;
 			}
-
+			ip6ip4_trace_t *t =
+				vlib_add_trace(vm, node, b0, sizeof(*t));
+			t->next_index = next0;
 				
 
 			//len = vlib_buffer_length_in_chain(vm, b0);
@@ -374,7 +380,9 @@ ip4ip6_output(vlib_main_t * vm, vlib_node_runtime_t * node,
 				vlib_buffer_advance(b0, sizeof(ip4_header_t));
 				next0 = IP4IP6_OUTPUT_NEXT_IP6_LOOKUP;
 			}
-
+			ip6ip4_trace_t *t =
+				vlib_add_trace(vm, node, b0, sizeof(*t));
+			t->next_index = next0;
 
 
 			vlib_validate_buffer_enqueue_x1(vm, node, next_index, to_next,
@@ -431,10 +439,7 @@ VLIB_REGISTER_NODE(ipip6_input_node) = {
     .format_trace = format_ipip_rx_trace,
 };
 
-typedef struct
-{
-	u32 next_index;
-} ip6ip4_trace_t;
+
 
 static u8 *
 format_ip6ip4_trace(u8 * s, va_list * args)
